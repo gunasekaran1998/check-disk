@@ -1,221 +1,43 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>CHKDSK Drive Scanner</title>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<style>
-  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-  body { font-family: system-ui, sans-serif; background: #f4f4f2; color: #1a1a1a; min-height: 100vh; }
-  .wrap { max-width: 680px; margin: 0 auto; padding: 2rem 1rem; }
-  .header { background: #fff; border: 1px solid #e5e5e0; border-radius: 12px; padding: 1.25rem 1.5rem; margin-bottom: 1.5rem; }
-  .header h1 { font-size: 18px; font-weight: 600; margin-bottom: 4px; }
-  .header p { font-size: 13px; color: #666; }
-  .card { background: #fff; border: 1px solid #e5e5e0; border-radius: 12px; padding: 1.25rem 1.5rem; margin-bottom: 1rem; }
-  label { font-size: 13px; color: #666; display: block; margin-bottom: 6px; }
-  .row { display: flex; gap: 10px; margin-bottom: 1rem; }
-  input { height: 36px; padding: 0 12px; border-radius: 8px; border: 1px solid #d5d5d0; background: #fafaf8; font-size: 14px; flex: 1; }
-  input:focus { outline: none; border-color: #378ADD; box-shadow: 0 0 0 2px #378ADD33; }
-  .btn { height: 36px; padding: 0 18px; border-radius: 8px; border: 1px solid #d5d5d0; background: #fff; font-size: 14px; cursor: pointer; }
-  .btn-primary { background: #185FA5; color: #fff; border-color: #185FA5; }
-  .btn-primary:hover { background: #0C447C; }
-  .btn:disabled { opacity: 0.5; cursor: not-allowed; }
-  .error { font-size: 13px; color: #c0392b; margin-bottom: 0.75rem; display: none; }
-  .terminal { background: #1a1a1a; border-radius: 8px; padding: 1rem 1.25rem; font-family: monospace; font-size: 12.5px; color: #e0e0e0; min-height: 140px; white-space: pre-wrap; line-height: 1.7; display: none; margin-top: 1rem; }
-  .ok { color: #5DCAA5; }
-  .warn { color: #EF9F27; }
-  .info { color: #85B7EB; }
-  .status-bar { display: none; margin-top: 10px; }
-  .badge { display: inline-block; padding: 4px 12px; border-radius: 6px; font-size: 12px; font-weight: 600; }
-  .badge-ok { background: #E1F5EE; color: #0F6E56; }
-  .badge-warn { background: #FAEEDA; color: #854F0B; }
-  .metrics { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 1rem; }
-  .metric { background: #f4f4f2; border-radius: 8px; padding: 0.75rem 1rem; }
-  .metric-val { font-size: 22px; font-weight: 600; }
-  .metric-lbl { font-size: 12px; color: #888; margin-top: 2px; }
-  .section-title { font-size: 12px; font-weight: 600; color: #888; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 10px; }
-  .h-row { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid #f0f0ee; font-size: 13px; }
-  .h-row:last-child { border-bottom: none; }
-  .top-bar { display: flex; justify-content: space-between; align-items: center; }
-  #login-view {} 
-  #app-view { display: none; }
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Available Drives</title>
 </head>
 <body>
-<div class="wrap">
+    <h1>Select an Available Drive</h1>
+    <select id="drive-dropdown">
+        <option value="" disabled selected>Select a drive</option>
+    </select>
+    <script>
+        // Function to detect available drives
+        function getAvailableDrives() {
+            let drives = ['C:', 'D:', 'E:']; // Example drives
+            let dropdown = document.getElementById('drive-dropdown');
 
-  <!-- LOGIN -->
-  <div id="login-view">
-    <div class="header">
-      <h1>CHKDSK Drive Scanner</h1>
-      <p>Enter your School ID to access the removable drive scanner.</p>
-    </div>
-    <div class="card">
-      <label>School ID</label>
-      <div class="row">
-        <input id="sid" placeholder="e.g. SCH-2024-001" maxlength="30" onkeydown="if(event.key==='Enter')login()" />
-        <button class="btn btn-primary" onclick="login()">Continue</button>
-      </div>
-      <div class="error" id="lerr">Please enter a valid School ID (letters, numbers, hyphens only)</div>
-    </div>
-  </div>
+            drives.forEach(drive => {
+                let option = document.createElement('option');
+                option.value = drive;
+                option.textContent = drive;
+                dropdown.appendChild(option);
+            });
+        }
 
-  <!-- APP -->
-  <div id="app-view">
-    <div class="header">
-      <div class="top-bar">
-        <div>
-          <h1>CHKDSK Drive Scanner</h1>
-          <p>Logged in as: <strong id="uid-display"></strong></p>
-        </div>
-        <button class="btn" onclick="logout()" style="font-size:12px;">Sign out</button>
-      </div>
-    </div>
+        // Validate selected drive
+        function validateDrive() {
+            let dropdown = document.getElementById('drive-dropdown');
+            let selectedDrive = dropdown.value;
+            if (selectedDrive) {
+                alert('You selected: ' + selectedDrive);
+            } else {
+                alert('Please select a drive!');
+            }
+        }
 
-    <div class="card">
-      <label>Drive to scan</label>
-      <div class="row">
-        <input id="drive" value="E:" maxlength="3" style="max-width:80px; flex:none;" />
-        <button class="btn btn-primary" id="scan-btn" onclick="runScan()">Run CHKDSK scan</button>
-      </div>
-      <div id="terminal" class="terminal"></div>
-      <div id="status-bar" class="status-bar"></div>
-    </div>
-
-    <div class="card">
-      <div class="section-title">Usage summary</div>
-      <div class="metrics">
-        <div class="metric"><div class="metric-val" id="m-total">—</div><div class="metric-lbl">Total scans</div></div>
-        <div class="metric"><div class="metric-val" id="m-healthy">—</div><div class="metric-lbl">Healthy</div></div>
-        <div class="metric"><div class="metric-val" id="m-issues">—</div><div class="metric-lbl">Issues found</div></div>
-      </div>
-      <div class="section-title">Recent scans</div>
-      <div id="history"></div>
-    </div>
-  </div>
-
-</div>
-<script>
-// ============================================================
-// 🔧 REPLACE THESE WITH YOUR SUPABASE PROJECT VALUES
-const SUPABASE_URL = 'https://ztdiihvgaezugdtqgijb.supabase.co';
-const SUPABASE_ANON_KEY = 'sb_publishable_iCOG4c6IjWqAQpd3WmKckw_a4EHrd02';
-// ============================================================
-
-const { createClient } = supabase;
-const db = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-
-let currentUser = null;
-
-function login() {
-  const val = document.getElementById('sid').value.trim();
-  if (!val || !/^[a-zA-Z0-9\-_]{3,30}$/.test(val)) {
-    document.getElementById('lerr').style.display = 'block'; return;
-  }
-  document.getElementById('lerr').style.display = 'none';
-  currentUser = val.toUpperCase();
-  document.getElementById('uid-display').textContent = currentUser;
-  document.getElementById('login-view').style.display = 'none';
-  document.getElementById('app-view').style.display = 'block';
-  loadHistory();
-}
-
-function logout() {
-  currentUser = null;
-  document.getElementById('sid').value = '';
-  document.getElementById('login-view').style.display = 'block';
-  document.getElementById('app-view').style.display = 'none';
-  document.getElementById('terminal').style.display = 'none';
-  document.getElementById('status-bar').style.display = 'none';
-}
-
-function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
-
-async function runScan() {
-  const drive = (document.getElementById('drive').value.trim().toUpperCase() || 'E:').slice(0, 2) + ':';
-  const term = document.getElementById('terminal');
-  const btn = document.getElementById('scan-btn');
-  btn.disabled = true; btn.textContent = 'Scanning...';
-  term.style.display = 'block'; term.innerHTML = '';
-
-  const lines = [
-    [300, 'info', 'The type of the file system is FAT32.'],
-    [600, '',     'Volume serial number is A4B2-3F1E'],
-    [900, '',     'Windows is verifying files and folders...'],
-    [1400,'',     'File and folder verification is complete.'],
-    [1700,'',     'Windows is verifying free space...'],
-    [2200,'',     'Free space verification is complete.'],
-  ];
-
-  const outcomes = [
-    { status: 'HEALTHY',      cls: 'ok',   msg: 'No further action is required.',  badge: 'badge-ok',   label: 'Healthy' },
-    { status: 'HEALTHY',      cls: 'ok',   msg: 'Volume is clean.',                badge: 'badge-ok',   label: 'Healthy' },
-    { status: 'ISSUES FIXED', cls: 'warn', msg: 'Errors found and fixed.',         badge: 'badge-warn', label: 'Issues fixed' },
-  ];
-  const out = outcomes[Math.floor(Math.random() * outcomes.length)];
-
-  for (const [delay, cls, text] of lines) {
-    await sleep(delay);
-    const s = document.createElement('span');
-    if (cls) s.className = cls;
-    s.textContent = drive + ' ' + text + '\n';
-    term.appendChild(s); term.scrollTop = 9999;
-  }
-  await sleep(300);
-  const fs = document.createElement('span');
-  fs.className = out.cls;
-  fs.textContent = drive + ' ' + out.msg + '\n';
-  term.appendChild(fs);
-
-  document.getElementById('status-bar').innerHTML =
-    `<span class="badge ${out.badge}">${drive} — ${out.label}</span>`;
-  document.getElementById('status-bar').style.display = 'block';
-
-  // Save to Supabase
-  await db.from('scans').insert({
-    school_id: currentUser,
-    drive: drive,
-    status: out.status
-  });
-
-  await loadHistory();
-  btn.disabled = false; btn.textContent = 'Run CHKDSK scan';
-}
-
-async function loadHistory() {
-  const { data, error } = await db
-    .from('scans')
-    .select('*')
-    .eq('school_id', currentUser)
-    .order('scanned_at', { ascending: false })
-    .limit(20);
-
-  if (error) { console.error(error); return; }
-
-  const total   = data.length;
-  const healthy = data.filter(r => r.status === 'HEALTHY').length;
-  const issues  = total - healthy;
-
-  document.getElementById('m-total').textContent   = total;
-  document.getElementById('m-healthy').textContent = healthy;
-  document.getElementById('m-issues').textContent  = issues;
-
-  const hist = document.getElementById('history');
-  if (!data.length) {
-    hist.innerHTML = '<p style="font-size:13px;color:#888;padding:0.5rem 0;">No scans yet.</p>';
-    return;
-  }
-  hist.innerHTML = data.slice(0, 8).map(r => {
-    const ts = new Date(r.scanned_at).toLocaleString('en-IN', { dateStyle: 'short', timeStyle: 'short' });
-    const bc = r.status === 'HEALTHY' ? 'badge-ok' : 'badge-warn';
-    return `<div class="h-row">
-      <span style="font-weight:500">${r.drive}</span>
-      <span style="color:#888">${ts}</span>
-      <span class="badge ${bc}" style="font-size:11px;padding:2px 8px">${r.status}</span>
-    </div>`;
-  }).join('');
-}
-</script>
+        // Initialize drive detection
+        getAvailableDrives();
+        document.getElementById('drive-dropdown').addEventListener('change', validateDrive);
+    </script>
 </body>
 </html>
